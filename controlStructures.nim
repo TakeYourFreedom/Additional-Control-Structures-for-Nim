@@ -1,49 +1,63 @@
 import macros
 
-##unless branch
+## This Module provides a number of Control Structures.
+## Most of them are just Syntactic Sugar: some Loops,
+## better syntax for defining Classes. But there is also
+## an Python-like Context-Manager and hopefully some more
+## in the future 
+
+
 template unless*(cond: bool, body: untyped) =
+  ##if not(cond)  
   if not(cond):
     body
 
-##until loop with testing at the beginning
+
 template until*(cond: bool, body: untyped) =
+  ##until loop with testing at the beginnings
   while not(cond):
     body
 
-##while loop with testing at the end
+
 template do_while*(cond: bool, body: untyped) =
+  ##while loop with testing at the end
   while true:
     body
     if not (cond):
       break
 
-##until loop with testing at the end
+
 template do_until*(cond: bool, body: untyped) =
+  ##until loop with testing at the end
   while true:
     body
     if (cond):
       break
 
-##repeat forever
+
 template do_forever*(body) =
+  ##repeat forever
   while true:
     body
 
-##repeat n times
+
 template times*(head: int, body: untyped) =
+  ##repeat n times
   for i in 1..head:
     body
 
-##Repeat until an exception is raised
+
 template do_until_exception*(body) =
+  ##Repeat until an exception is raised
   while true:
     try:
       body
     except:
       break
 
-##Repeat while an exception is raised
+
 template do_while_exception*(body) = 
+  ##Repeat while an exception is raised
   while true:
     try:
       body
@@ -51,9 +65,10 @@ template do_while_exception*(body) =
     except:
       discard
 
-##Arithmetic If
-macro a_if*(head, body: untyped): untyped =
 
+
+macro a_if*(head, body: untyped): untyped =
+  ##An Arithmetic If similiar to the one in Fortran
   template prepareAST(exp, pos, zero, neg: untyped) =
     case exp:
     of 1..high(int):
@@ -72,9 +87,10 @@ macro a_if*(head, body: untyped): untyped =
   else:
     error "syntaxError"
 
-## Python-like Context Manager
-## Executes 'enter()' on entrance and 'exit()' on exit
+
 macro with*(head, body: untyped): untyped =
+  ## Python-like Context Manager
+  ## Executes 'enter()' on entrance and 'exit()' on exit
   var
     value, varName: NimNode
 
@@ -105,53 +121,10 @@ macro with*(head, body: untyped): untyped =
   result = getAst(withstmt(value, varName, body))
 
 proc enter*(a: any) =
+  ##general proc for 'with'
   discard
 
 proc exit*(a: any) =
+  ##general proc for 'with'
   discard
   
-##Python-like Class Definitions
-macro class*(head, body: untyped): untyped =
-  var
-    typeName, baseName: NimNode
-    exported: bool
-
-  if head.kind == nnkInfix and $head[0] == "of":
-    typeName = head[1]
-    baseName = head[2]
-  elif head.kind == nnkInfix and $head[0] == "*" and head[2].kind == nnkPrefix and $head[2][0] == "of":
-    typeName = head[1]
-    baseName = head[2][1]
-    exported = true
-  else:
-    error "Invalid node: " & head.lispRepr
-
-  template typeDecl(a, b): untyped =
-    type a = ref object of b
-
-  template typeDeclPub(a, b): untyped =
-    type a* = ref object of b
-
-  if exported:
-    result = getAst(typeDeclPub(typeName, baseName))
-  else:
-    result = getAst(typeDecl(typeName, baseName))
-
-  var recList = newNimNode(nnkRecList)
-
-  let ctorName = newIdentNode("new" & $typeName)
-
-  for node in body.children:
-    case node.kind:
-    of nnkMethodDef, nnkProcDef:
-      if node.name.kind != nnkAccQuoted and node.name.basename == ctorName:
-        node.params[0] = typeName
-      else:
-        node.params.insert(1, newIdentDefs(ident("self"), typeName))
-      result.add(node)
-    of nnkVarSection:
-      for n in node.children:
-        recList.add(n)
-    else:
-      result.add(node)
-  result[0][0][2][0][2] = recList
