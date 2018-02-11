@@ -5,7 +5,7 @@ import macros
 ## better syntax for defining Classes. But there is also
 ## an Python-like Context-Manager and hopefully some more
 ## in the future 
-
+##
 
 template unless*(cond: bool, body: untyped) =
   ##if not(cond)  
@@ -121,10 +121,10 @@ macro take*(head, body: untyped): untyped =
   result = getAst(withstmt(value, varName, body))
 
 proc enter*(a: any) =
-  ##general proc for 'with'
+  ##general proc for 'take'
   discard
 
 proc exit*(a: any) =
-  ##general proc for 'with'
+  ##general proc for 'take'
   discard
   
