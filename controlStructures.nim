@@ -128,3 +128,75 @@ proc exit*(a: any) =
   ##general proc for 'take'
   discard
   
+
+macro class*(head, body: untyped): untyped =
+  ##Better Syntax for Class-Definitions
+  ## 
+  ## ..code-block:: nim
+  ##   class Test of RootObj:
+  ##     var
+  ##       name: string
+  ##     proc hello() =
+  ##       echo "Hello " & this.name
+  ##     method bye() =
+  ##       echo "Bye " & this.name
+  ## 
+  ## gets transformed to:
+  ## ..code-block:: nim
+  ##   type Test = ref of RootObj
+  ##     name: string
+  ##   proc hello(this: Test) =
+  ##     echo "Hello " & this.name
+  ##   method bye(this: Test) {.base.}=
+  ##     echo "Bye " & this.name
+
+  var
+    className, classType : NimNode 
+    exported : bool
+    routineDefs : NimNode
+    varDefs : NimNode
+
+  varDefs = newNimNode(nnkRecList)
+  routineDefs = newStmtList()
+
+  if head.kind == nnkInfix and $head[0] == "of":
+    className = head[1]
+    classType = head[2]
+    exported = false
+  elif head.kind == nnkInfix and $head[0] == "*":
+    className = head[1]
+    classType = head[2][1]
+    exported = true
+  else:
+    error "Invalid Node"
+
+  for node in body:
+    if node.kind == nnkProcDef or node.kind == nnkMethodDef:
+      routineDefs.add(node)
+    elif node.kind == nnkVarSection:
+      for i in node:
+        if i.kind == nnkIdentDefs:
+          varDefs.add(i)
+
+  for node in routineDefs:
+    node[3].insert(1, newIdentDefs(ident("this"), className))
+    if node.kind == nnkMethodDef:
+      node[4] = newNimNode(nnkPragma)
+      node[4].add(ident("base"))
+  
+  
+  result = routineDefs
+
+  template typeDecl(a, b: untyped): untyped =
+    type a = ref object of b
+
+  template typeDeclPub(a, b: untyped): untyped =
+    type a* = ref object of b
+
+
+  if exported:
+    result.insert(0, getAst(typeDeclPub(className, classType)))
+  else:
+    result.insert(0, getAst(typeDecl(className, classType)))
+
+  result[0][0][2][0][2] = varDefs

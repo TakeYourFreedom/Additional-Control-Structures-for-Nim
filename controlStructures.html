@@ -1255,6 +1255,8 @@ function main() {
     title="a_if(head, body: untyped): untyped"><wbr />a_<wbr />if<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#take.m,untyped,untyped"
     title="take(head, body: untyped): untyped"><wbr />take<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#class.m,untyped,untyped"
+    title="class(head, body: untyped): untyped"><wbr />class<span class="attachedType" style="visibility:hidden"></span></a></li>
 
   </ul>
 </li>
@@ -1320,6 +1322,32 @@ An Arithmetic If similiar to the one in Fortran
 Python-like Context Manager Executes 'enter()' on entrance and 'exit()' on exit
 
 </dd>
+<dt id="class"><a name="class.m,untyped,untyped"></a><pre><span class="Keyword">macro</span> <span class="Identifier">class</span><span class="Other">(</span><span class="Identifier">head</span><span class="Other">,</span> <span class="Identifier">body</span><span class="Other">:</span> <span class="Identifier">untyped</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dd>
+Better Syntax for Class-Definitions<blockquote><p><blockquote><p><dl class="docutils"><dt>class Test of RootObj:</dt>
+<dd><dl class="docutils"><dt>var</dt>
+<dd>name: string</dd>
+<dt>proc hello() =</dt>
+<dd>echo &quot;Hello &quot; &amp; this.name</dd>
+<dt>method bye() =</dt>
+<dd>echo &quot;Bye &quot; &amp; this.name</dd>
+</dl>
+</dd>
+</dl>
+</p></blockquote>
+<p>gets transformed to: ..code-block:: nim</p>
+<blockquote><p><dl class="docutils"><dt>type Test = ref of RootObj</dt>
+<dd>name: string</dd>
+<dt>proc hello(this: Test) =</dt>
+<dd>echo &quot;Hello &quot; &amp; this.name</dd>
+<dt>method bye(this: Test) {.base.}=</dt>
+<dd>echo &quot;Bye &quot; &amp; this.name</dd>
+</dl>
+</p></blockquote>
+</p></blockquote>
+
+
+</dd>
 
 </dl></div>
 <div class="section" id="18">
@@ -1375,7 +1403,7 @@ Repeat while an exception is raised
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2018-02-11 09:22:28 UTC</small>
+        <small>Made with Nim. Generated: 2018-02-11 12:17:48 UTC</small>
       </div>
     </div>
   </div>
