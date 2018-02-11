@@ -88,7 +88,7 @@ macro a_if*(head, body: untyped): untyped =
     error "syntaxError"
 
 
-macro with*(head, body: untyped): untyped =
+macro take*(head, body: untyped): untyped =
   ## Python-like Context Manager
   ## Executes 'enter()' on entrance and 'exit()' on exit
   var
